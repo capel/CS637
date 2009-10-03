@@ -21,7 +21,7 @@ void
 pinit(void)
 {
   initlock(&proc_table_lock, "proc_table");
-  scheduler_init();
+  schedule_init();
 }
 
 // Look in the process table for an UNUSED proc.
@@ -123,7 +123,6 @@ copyproc(struct proc *p)
     np->parent = p;
     memmove(np->tf, p->tf, sizeof(*np->tf));
 
-	schedule_create(np);
 
     np->sz = p->sz;
     if((np->mem = kalloc(np->sz)) == 0){
@@ -141,6 +140,9 @@ copyproc(struct proc *p)
     np->cwd = idup(p->cwd);
   }
 
+  schedule_init_proc(np, 100); // TODO ticket logic
+  schedule_join(np);
+  
   // Set up new context to start executing at forkret (see below).
   memset(&np->context, 0, sizeof(np->context));
   np->context.eip = (uint)forkret;
@@ -214,12 +216,14 @@ scheduler(void)
     // Enable interrupts on this processor.
     sti();
 
+    cprintf("scheduler start\n");
     // Loop over process table looking for process to run.
     acquire(&proc_table_lock);
     for(i = 0; i < NPROC; i++){
-      p = schedule_queue_pop();
+      p = schedule_pop();
+      cprintf("run %p\n", p);
 
-      if(p->state != RUNNABLE)
+      if(!p || p->state != RUNNABLE)
         continue;
 
       // Switch to chosen process.  It is the process's job
@@ -228,11 +232,14 @@ scheduler(void)
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
+	cprintf("swtch");
       swtch(&c->context, &p->context);
-
+	cprintf("...done");
 	  int elapsed = clock() - p->elapsed;
 	  p->pass = (p->stride * elapsed) / quantum;
-	  schedule_queue_insert(p);
+	cprintf("about to insert");  
+	schedule_insert(p);
+	cprintf("...done");
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.

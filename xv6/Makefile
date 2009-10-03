@@ -1,4 +1,5 @@
 OBJS = \
+	scheduler.o\
 	bio.o\
 	console.o\
 	exec.o\

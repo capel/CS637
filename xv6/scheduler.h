@@ -7,8 +7,8 @@ struct schedule_data {
 	struct proc * heap[NPROC];
 };
 
-void schedule_queue_insert(struct proc * p);
-struct proc * schedule_queue_pop();
+void schedule_insert(struct proc*);
+struct proc * schedule_pop();
 void schedule_init();
 void schedule_join(struct proc *p);
 void schedule_leave(struct proc *p);
@@ -16,3 +16,5 @@ void schedule_init_proc(struct proc *p, int tickets);
 
 extern const int quantum;
 extern const int stride1;
+
+unsigned clock();
