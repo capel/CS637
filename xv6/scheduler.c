@@ -17,17 +17,17 @@ const int quantum = 10000000;
 void schedule_init()
 {
   initlock(&sched_data_lock, "sched_data");
-  sched_data->bottom = 0;
+  sched_data.bottom = 0;
 }
 
 void schedule_update()
 {
 	acquire(&sched_data_lock);
-	static int last_update = 0;
+	static int last_update = clock();
 	int elapsed;
 
-	elapsed = __time() - last_update;
-	last_update += elapse;
+	elapsed = clock() - last_update;
+	last_update = clock();
 
 	sched_data.global_pass += (sched_data.global_stride * elapsed) / quantum;
 	
@@ -40,12 +40,46 @@ void global_tickets_update(int tickets)
 	sched_data.global_stride = stride1 / sched_data.global_tickets;
 }
 
+
+struct proc * _queue_remove(int root_index)
+{
+	acquire(&sched_data_lock);
+	struct proc * heap[] = sched_data.heap;
+	struct proc * top = heap[0];
+	// reheapify
+	heap[root_index] = heap[sched_data.bottom--];
+	int current = root_index;
+	while(1)
+	{
+		int min;
+		if (2*current + 1 >= sched_data.bottom)
+			break;
+		else if (2*current + 2 >= sched_data.bottom)
+			min = 2 * current + 1;
+		else
+			min = (heap[2*current + 1]->pass > heap[2*current + 2]->pass) ? 2*current + 1 : 2*current + 2;
+		
+		if (heap[current]->pass > heap[min]->pass)
+		{
+			struct proc * temp = heap[current];
+			heap[current] = heap[min];
+			heap[min] = temp;
+			current = min;
+		}
+		else
+			break;
+	}
+
+	release(&sched_data_lock);
+	return top;
+}
+
 void queue_insert(struct proc * p)
 {
 	acquire(&sched_data_lock);
 	int current = sched_data.bottom;
 	sched_data.heap[sched_data.bottom++] = p;
-	while(current && sched_data.heap[current].pass > sched_data.heap[(current - 1)/2].pass)
+	while(current && sched_data.heap[current]->pass > sched_data.heap[(current - 1)/2]->pass)
 	{
 		struct proc* temp = sched_data.heap[(current-1)/2];
 		sched_data.heap[(current-1)/2] = sched_data.heap[current];
@@ -78,44 +112,12 @@ void queue_remove(struct proc * p)
 	release(&sched_data_lock);
 }
 
-struct proc * _queue_remove(int root_index)
-{
-	acquire(&sched_data_lock);
-	struct proc * heap[] = sched_data.heap;
-	struct proc * top = heap[0];
-	// reheapify
-	heap[root_index] = heap[sched_data.bottom--];
-	int current = root_index;
-	while(true)
-	{
-		int min;
-		if (2*current + 1 >= sched_data.bottom)
-			break;
-		else if (2*current + 2 >= sched_data.bottom)
-			min = 2 * current + 1;
-		else
-			min = (heap[2*current + 1].pass > heap[2*current + 2].pass) ? 2*current + 1 : 2*current + 2;
-		
-		if (heap[current].pass > heap[min].pass)
-		{
-			struct proc * temp = heap[current];
-			heap[current] = heap[min];
-			heap[min] = temp;
-			current = min;
-		}
-		else
-			break;
-	}
-
-	release(&sched_data_lock);
-	return top;
-}
 
 void schedule_join(struct proc *p)
 {
 	acquire(&sched_data_lock);
-	global_pass_update();
-	p->pass = sched_data.global_pass + p->remain;
+	schedule_update();
+	p->pass = sched_data.global_pass + p->remaining;
 	p->elapsed = clock();
 	global_tickets_update(p->tickets);
 
@@ -126,7 +128,7 @@ void schedule_join(struct proc *p)
 void schedule_leave(struct proc *p)
 {
 	acquire(&sched_data_lock);
-	global_pass_update();
+	schedule_update();
 	p->remain = p->pass - sched_data.global_pass;
 
 	global_tickets_update(-p->tickets);
@@ -139,5 +141,5 @@ void schedule_init_proc(struct proc *p, int tickets)
 {
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
-	p->remain = c->stride;
+	p->remaining = p->stride;
 }
