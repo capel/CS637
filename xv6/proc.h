@@ -41,6 +41,10 @@ struct proc {
   struct context context;   // Switch here to run process
   struct trapframe *tf;     // Trap frame for current interrupt
   char name[16];            // Process name (debugging)
+  int tickets;                 // for stride scheduler
+  int stride;                 // amount to move each time it is called
+  int pass;                   // number of 'movements'
+  unsigned elapsed;          // Time elapsed
 };
 
 // Process memory is laid out contiguously, low addresses first:
@@ -58,8 +62,9 @@ struct cpu {
   struct segdesc gdt[NSEGS];  // x86 global descriptor table
   volatile uint booted;        // Has the CPU started?
   int ncli;                   // Depth of pushcli nesting.
-  int intena;                 // Were interrupts enabled before pushcli? 
+  int intena;                 // Were interrupts enabled before pushcli?  
 };
+
 
 extern struct cpu cpus[NCPU];
 extern int ncpu;

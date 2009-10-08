@@ -168,3 +168,8 @@ lapic_startap(uchar apicid, uint addr)
     microdelay(200);
   }
 }
+
+unsigned clock()
+{
+	return lapic[TCCR];
+}

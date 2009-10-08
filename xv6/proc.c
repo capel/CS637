@@ -5,8 +5,10 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "scheduler.h"
 
 struct spinlock proc_table_lock;
+extern struct spinlock sched_data_lock;
 
 struct proc proc[NPROC];
 static struct proc *initproc;
@@ -19,6 +21,7 @@ void
 pinit(void)
 {
   initlock(&proc_table_lock, "proc_table");
+  scheduler_init();
 }
 
 // Look in the process table for an UNUSED proc.
@@ -119,7 +122,9 @@ copyproc(struct proc *p)
   if(p){  // Copy process state from p.
     np->parent = p;
     memmove(np->tf, p->tf, sizeof(*np->tf));
-  
+
+	schedule_create(np);
+
     np->sz = p->sz;
     if((np->mem = kalloc(np->sz)) == 0){
       kfree(np->kstack, KSTACKSIZE);
@@ -212,7 +217,8 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&proc_table_lock);
     for(i = 0; i < NPROC; i++){
-      p = &proc[i];
+      p = schedule_queue_pop();
+
       if(p->state != RUNNABLE)
         continue;
 
@@ -223,6 +229,10 @@ scheduler(void)
       setupsegs(p);
       p->state = RUNNING;
       swtch(&c->context, &p->context);
+
+	  int elapsed = clock() - p->elapsed;
+	  p->pass = (p->stride * elapsed) / quantum;
+	  schedule_queue_insert(p);
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
