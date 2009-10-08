@@ -13,6 +13,7 @@ struct schedule_data sched_data;
 const int stride1 = (1 << 20);
 const int quantum = 10000000;
 
+unsigned clock();
 
 void schedule_init()
 {
@@ -129,7 +130,8 @@ void schedule_leave(struct proc *p)
 {
 	acquire(&sched_data_lock);
 	schedule_update();
-	p->remain = p->pass - sched_data.global_pass;
+	p->elapsed = clock() - p->elapsed;
+	p->elapsed = (p->elapsed > 0) ? p->elapsed : 0;
 
 	global_tickets_update(-p->tickets);
 	
@@ -141,5 +143,4 @@ void schedule_init_proc(struct proc *p, int tickets)
 {
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
-	p->remaining = p->stride;
 }
