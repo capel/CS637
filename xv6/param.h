@@ -1,4 +1,4 @@
-#define NPROC        64  // maximum number of processes
+#define NPROC        1  // maximum number of processes
 #define PAGE       4096  // granularity of user-space memory allocation
 #define KSTACKSIZE PAGE  // size of per-process kernel stack
 #define NCPU          8  // maximum number of CPUs

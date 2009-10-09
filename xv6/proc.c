@@ -374,6 +374,27 @@ kill(int pid)
   return -1;
 }
 
+int
+fund(int pid, int numtickets)
+{
+  struct proc *p;
+
+  acquire(&proc_table_lock);
+  
+  cprintf("fund : %d to %d funded %d\n", cp->pid, pid, numtickets);
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->pid == pid){
+      schedule_leave(p);
+	  p->tickets = numtickets;
+	  schedule_join(p);
+      release(&proc_table_lock);
+      return 0;
+    }
+  }
+  release(&proc_table_lock);
+  return -1;
+}
+
 // Exit the current process.  Does not return.
 // Exited processes remain in the zombie state
 // until their parent calls wait() to find out they exited.
@@ -494,7 +515,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-    cprintf("%d %s %s", p->pid, state, p->name);
+	cprintf("%d %s %s %d", p->pid, state, p->name, p->tickets);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context.ebp+2, pc);
       for(j=0; j<10 && pc[j] != 0; j++)

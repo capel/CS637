@@ -40,6 +40,18 @@ sys_kill(void)
   return kill(pid);
 }
 
+sys_fund(void)
+{
+  int pid;
+  int numtickets;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+  argint(1, &numtickets);
+  return fund(pid);
+}
+
+
 int
 sys_getpid(void)
 {
