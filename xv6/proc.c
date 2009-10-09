@@ -220,6 +220,44 @@ curproc(void)
   return p;
 }
 
+void
+scheduler(void)
+{
+  struct proc *p;
+  struct cpu *c;
+  int i;
+  int lastpid;
+ 
+  c = &cpus[cpu()];
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+ 
+    // Loop over process table looking for process to run.
+    acquire(&proc_table_lock);
+    p = schedule_pop();
+      if(p->state != RUNNABLE)
+        continue;
+ 
+      // Switch to chosen process. It is the process's job
+      // to release proc_table_lock and then reacquire it
+      // before jumping back to us.
+      c->curproc = p;
+      setupsegs(p);
+      p->state = RUNNING;
+ 
+      swtch(&c->context, &p->context);
+ 
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->curproc = 0;
+      setupsegs(0);
+    release(&proc_table_lock);
+ 
+  }
+}
+
+#if 0
 // Per-CPU process scheduler.
 // Each CPU calls scheduler() after setting itself up.
 // Scheduler never returns.  It loops, doing:
@@ -275,7 +313,7 @@ scheduler(void)
     release(&proc_table_lock);
   }
 }
-
+#endif
 // Enter scheduler.  Must already hold proc_table_lock
 // and have changed curproc[cpu()]->state.
 void
