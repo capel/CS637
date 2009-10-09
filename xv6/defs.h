@@ -105,7 +105,7 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-void			fund(int pid, int tickets);
+int			fund(int pid, int tickets);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

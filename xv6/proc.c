@@ -130,7 +130,7 @@ copyproc(struct proc *p)
  // cprintf(".c");
 
   if(p){  // Copy process state from p.
-	mod_tickets(np, tickets);
+	mod_tickets(np, p->tickets);
 
     np->parent = p;
     memmove(np->tf, p->tf, sizeof(*np->tf));
@@ -153,7 +153,7 @@ copyproc(struct proc *p)
   }
   else
   {
-	  mod_tickets(np, 100) // TODO
+	  mod_tickets(np, 100); // TODO
   }
 
 
