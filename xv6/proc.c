@@ -234,10 +234,11 @@ scheduler(void)
     sti();
  
     // Loop over process table looking for process to run.
-    acquire(&proc_table_lock);
+	if (!holding)
+    	acquire(&proc_table_lock);
     p = schedule_pop();
       if(p->state != RUNNABLE)
-        continue;
+        schedule_insert(p);
  
       // Switch to chosen process. It is the process's job
       // to release proc_table_lock and then reacquire it
