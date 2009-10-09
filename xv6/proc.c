@@ -331,12 +331,10 @@ wakeup1(void *chan)
 {
   struct proc *p;
 
-  
-  cprintf("wakeup1\n");
-
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
     {
+	  cprintf("wakeup1: \n", p->pid);
       p->state = RUNNABLE;
       schedule_join(p);
     }
@@ -444,7 +442,7 @@ wait(void)
       if(p->parent == cp){
         if(p->state == ZOMBIE){
           // Found one.
-          kfree(p->mem, p->sz);
+          kfree(p->mem, p->sz);	
           kfree(p->kstack, KSTACKSIZE);
           pid = p->pid;
           p->state = UNUSED;

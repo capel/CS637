@@ -171,9 +171,9 @@ void queue_remove(struct proc * p)
 
 void schedule_join(struct proc *p)
 {
-  cprintf("start s_join\n");
 	schedule_update();
 	acquire(&sched_data_lock);
+	cprintf("join : %d\n", p->pid);
 	p->pass = sched_data.global_pass + (p->elapsed ? (quantum - p->elapsed) : 0);
 	p->elapsed = clock();
 	global_tickets_update(p->tickets);
@@ -185,9 +185,10 @@ void schedule_join(struct proc *p)
 
 void schedule_leave(struct proc *p)
 {
-  cprintf("start s_leave\n");
 	schedule_update();
 	acquire(&sched_data_lock);
+
+	cprintf("leave : %d\n", p->pid);
 	p->elapsed = clock() - p->elapsed;
 	p->elapsed = (p->elapsed > 0) ? p->elapsed : 0;
 
