@@ -256,8 +256,9 @@ scheduler(void)
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
+	  cprintf("before swtch\n");
       swtch(&c->context, &p->context);
-	  
+	  cprintf("after switch\n");
 	//int elapsed = clock() - p->elapsed;
 	  p->pass += p->stride; // (p->stride * elapsed) / quantum;
 	if (p->state == RUNNABLE)
