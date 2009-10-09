@@ -234,9 +234,14 @@ scheduler(void)
     sti();
  
     // Loop over process table looking for process to run.
-	if (!holding)
+	if (!holding(&proc_table_lock))
     	acquire(&proc_table_lock);
     p = schedule_pop();
+	if (!p)
+	{
+		release(&proc_table_lock);
+		continue;
+	}
       if(p->state != RUNNABLE)
         schedule_insert(p);
  

@@ -162,6 +162,7 @@ void queue_remove(struct proc * p)
 		}
 	}
 
+  cprintf("end s_remove\n");
 	release(&sched_data_lock);
 }
 
