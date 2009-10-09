@@ -159,6 +159,8 @@ copyproc(struct proc *p)
 
  // cprintf(".s");
 
+  
+	  cprintf("copyproc -> join\n");
   schedule_join(np);
   
   // Set up new context to start executing at forkret (see below).
@@ -363,6 +365,7 @@ wakeup1(void *chan)
     {
 	//  cprintf("wakeup1: \n", p->pid);
       p->state = RUNNABLE;
+	  cprintf("wakeup1 -> join\n");
       schedule_join(p);
     }
 }
