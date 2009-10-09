@@ -232,15 +232,17 @@ scheduler(void)
     // Enable interrupts on this processor.
     sti();
 
-    acquire(&proc_table_lock);
+    
+		acquire(&proc_table_lock);
     // Loop over process table looking for process to run.
-      	while(1)
-	{
-		p = schedule_pop();
+		while(!(p = schedule_pop())
+		{
+    		release(&proc_table_lock);
+			acquire(&proc_table_lock);
+		}
 
-      		if(p && p->state == RUNNABLE)
-			break;
-	}
+      	if(p->state != RUNNABLE)
+			continue;
       // Switch to chosen process.  It is the process's job
       // to release proc_table_lock and then reacquire it
       // before jumping back to us.
