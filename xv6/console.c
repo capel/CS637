@@ -303,3 +303,21 @@ panic(char *s)
     ;
 }
 
+
+void
+panic2(char *s, char* arg)
+{
+  int i;
+  uint pcs[10];
+  
+  __asm __volatile("cli");
+  use_console_lock = 0;
+  cprintf("cpu%d: panic: %s %s\n", cpu(), s, arg);
+  getcallerpcs(&s, pcs);
+  for(i=0; i<10; i++)
+    cprintf(" %p", pcs[i]);
+  panicked = 1; // freeze other CPU
+  for(;;)
+    ;
+}
+

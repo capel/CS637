@@ -18,6 +18,7 @@ void            console_init(void);
 void            cprintf(char*, ...);
 void            console_intr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
+void            panic2(char*, char*) __attribute__((noreturn));
 
 // exec.c
 int             exec(char*, char**);
