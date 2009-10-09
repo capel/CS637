@@ -253,7 +253,8 @@ scheduler(void)
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
- 
+      p->pass += p->stride;
+
       swtch(&c->context, &p->context);
  
       // Process is done running for now.
