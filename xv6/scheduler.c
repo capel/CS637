@@ -177,7 +177,7 @@ void schedule_join(struct proc *p)
 	//p->elapsed = clock();
 
 	release(&sched_data_lock);
-	cprintf("join\n");
+	//cprintf("join\n");
 	schedule_insert(p);
 }
 
@@ -203,6 +203,6 @@ void mod_tickets(struct proc *p, int tickets)
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
     //p->elapsed = 0;
-	cprintf("mod_tickets -> join\n");
+	//cprintf("mod_tickets -> join\n");
 	schedule_join(p);
 }

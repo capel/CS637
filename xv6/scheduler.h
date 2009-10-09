@@ -16,5 +16,6 @@ void mod_tickets(struct proc *p, int tickets);
 
 extern const int quantum;
 extern const int stride1;
+extern struct schedule_data sched_data;
 
 unsigned clock();

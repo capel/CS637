@@ -160,7 +160,7 @@ copyproc(struct proc *p)
  // cprintf(".s");
 
   
-	  cprintf("copyproc -> join\n");
+	  //cprintf("copyproc -> join\n");
   schedule_join(np);
   
   // Set up new context to start executing at forkret (see below).
@@ -261,7 +261,7 @@ scheduler(void)
 	  p->pass += p->stride; // (p->stride * elapsed) / quantum;
 	if (p->state == RUNNABLE)
 	{
-		cprintf("scheduler\n");
+		//cprintf("scheduler\n");
 		schedule_insert(p);
 
 	}
@@ -365,7 +365,7 @@ wakeup1(void *chan)
     {
 	//  cprintf("wakeup1: \n", p->pid);
       p->state = RUNNABLE;
-	  cprintf("wakeup1 -> join\n");
+	  //cprintf("wakeup1 -> join\n");
       schedule_join(p);
     }
 }
@@ -414,6 +414,7 @@ fund(int pid, int numtickets)
   cprintf("fund : %d to %d funded %d\n", cp->pid, pid, numtickets);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
+      mod_tickets(p, numtickets);
       release(&proc_table_lock);
       return 0;
     }
@@ -542,7 +543,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-	cprintf("%d %s %s %d", p->pid, state, p->name, p->tickets);
+	cprintf("%d %s %s _%d_ ", p->pid, state, p->name, p->tickets);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context.ebp+2, pc);
       for(j=0; j<10 && pc[j] != 0; j++)
@@ -550,5 +551,24 @@ procdump(void)
     }
     cprintf("\n");
   }
+  cprintf("Process Queue\n");
+  for(i = 0; i <= sched_data.bottom, ++i)
+  {    
+    p = &proc[i];
+    if(p->state == UNUSED)
+      continue;
+    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
+      state = states[p->state];
+    else
+      state = "???";
+	cprintf("%d %s %s _%d_ ", p->pid, state, p->name, p->tickets);
+    if(p->state == SLEEPING){
+      getcallerpcs((uint*)p->context.ebp+2, pc);
+      for(j=0; j<10 && pc[j] != 0; j++)
+        cprintf(" %p", pc[j]);
+    }
+    cprintf("\n");
+
+
 }
 
