@@ -108,15 +108,15 @@ copyproc(struct proc *p)
   int i;
   struct proc *np;
 
-  cprintf("cp.a");
+ // cprintf("cp.a");
 
   // Allocate process.
   if((np = allocproc()) == 0)
   {
-	  cprintf("allocproc failed");
+	 // cprintf("allocproc failed");
     return 0;
   }
-  cprintf(".k");
+ // cprintf(".k");
 
 
   // Allocate kernel stack.
@@ -127,7 +127,7 @@ copyproc(struct proc *p)
   np->tf = (struct trapframe*)(np->kstack + KSTACKSIZE) - 1;
 
   
-  cprintf(".c");
+ // cprintf(".c");
 
 
   if(p){  // Copy process state from p.
@@ -152,7 +152,7 @@ copyproc(struct proc *p)
   }
 
 
-  cprintf(".s");
+ // cprintf(".s");
 
   schedule_init_proc(np, 100); // TODO ticket logic
   schedule_join(np);
@@ -165,7 +165,7 @@ copyproc(struct proc *p)
   // Clear %eax so that fork system call returns 0 in child.
   np->tf->eax = 0;
   
-  cprintf(".d");
+  //cprintf(".d");
 
   return np;
 }
@@ -235,7 +235,7 @@ scheduler(void)
     
 		acquire(&proc_table_lock);
     // Loop over process table looking for process to run.
-		while(!(p = schedule_pop())
+		while(!(p = schedule_pop()))
 		{
     		release(&proc_table_lock);
 			acquire(&proc_table_lock);
@@ -314,7 +314,7 @@ sleep(void *chan, struct spinlock *lk)
   if(lk == 0)
     panic("sleep without lk");
 
-  cprintf("sleep : %d\n", cp->pid);
+  //cprintf("sleep : %d\n", cp->pid);
 
   // Must acquire proc_table_lock in order to
   // change p->state and then call sched.
@@ -353,7 +353,7 @@ wakeup1(void *chan)
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
     {
-	  cprintf("wakeup1: \n", p->pid);
+	//  cprintf("wakeup1: \n", p->pid);
       p->state = RUNNABLE;
       schedule_join(p);
     }
@@ -378,7 +378,7 @@ kill(int pid)
 
   acquire(&proc_table_lock);
   
-  cprintf("kill : %d to %d\n", cp->pid, pid);
+ // cprintf("kill : %d to %d\n", cp->pid, pid);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
@@ -426,7 +426,7 @@ exit(void)
   if(cp == initproc)
     panic("init exiting");
 
-  cprintf("exit : %d\n", cp->pid);
+  //cprintf("exit : %d\n", cp->pid);
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -471,7 +471,7 @@ wait(void)
 
   acquire(&proc_table_lock);
   
-  cprintf("wait : %d\n", cp->pid);
+//  cprintf("wait : %d\n", cp->pid);
   for(;;){
     // Scan through table looking for zombie children.
     havekids = 0;
