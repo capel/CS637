@@ -250,6 +250,8 @@ scheduler(void)
  
       // Process is done running for now.
       // It should have changed its p->state before coming back.
+	  if (p->state == RUNNABLE)
+		  schedule_insert(p);
       c->curproc = 0;
       setupsegs(0);
     release(&proc_table_lock);
