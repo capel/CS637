@@ -230,12 +230,12 @@ scheduler(void)
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
-	cprintf("swtch %d", p->pid);
       swtch(&c->context, &p->context);
-	cprintf("...done\n");
-	  int elapsed = clock() - p->elapsed;
-	  p->pass = (p->stride * elapsed) / quantum;
-	schedule_insert(p);
+	  
+	int elapsed = clock() - p->elapsed;
+	p->pass = (p->stride * elapsed) / quantum;
+	if (p->state == RUNNABLE)
+		schedule_insert(p);
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
