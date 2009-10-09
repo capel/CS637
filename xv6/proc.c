@@ -209,45 +209,39 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c;
-  int i;
 
   c = &cpus[cpu()];
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
-    cprintf("scheduler start\n");
-    // Loop over process table looking for process to run.
     acquire(&proc_table_lock);
-    for(i = 0; i < NPROC; i++){
-      p = schedule_pop();
-      cprintf("run %p\n", p);
+    // Loop over process table looking for process to run.
+      	while(1)
+	{
+		p = schedule_pop();
 
-      if(!p || p->state != RUNNABLE)
-        continue;
-
+      		if(p && p->state == RUNNABLE)
+			break;
+	}
       // Switch to chosen process.  It is the process's job
       // to release proc_table_lock and then reacquire it
       // before jumping back to us.
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
-	cprintf("swtch");
+	cprintf("swtch %d", p->pid);
       swtch(&c->context, &p->context);
-	cprintf("...done");
+	cprintf("...done\n");
 	  int elapsed = clock() - p->elapsed;
 	  p->pass = (p->stride * elapsed) / quantum;
-	cprintf("about to insert");  
 	schedule_insert(p);
-	cprintf("...done");
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
       c->curproc = 0;
       setupsegs(0);
-    }
     release(&proc_table_lock);
-
   }
 }
 
@@ -315,6 +309,7 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   cp->chan = chan;
   cp->state = SLEEPING;
+  schedule_leave(cp);
   sched();
 
   // Tidy up.
@@ -336,7 +331,10 @@ wakeup1(void *chan)
 
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
+    {
       p->state = RUNNABLE;
+      schedule_join(p);
+    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -411,6 +409,7 @@ exit(void)
   // Jump into the scheduler, never to return.
   cp->killed = 0;
   cp->state = ZOMBIE;
+  schedule_leave(cp);
   sched();
   panic("zombie exit");
 }

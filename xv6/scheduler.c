@@ -16,12 +16,20 @@ const int quantum = 10000000;
 
 void schedule_init()
 {
+  cprintf("start s_init\n");
   initlock(&sched_data_lock, "sched_data");
+  acquire(&sched_data_lock);
   sched_data.bottom = 0;
+  sched_data.global_tickets = 0;
+  sched_data.global_stride = 0;
+  sched_data.global_pass = 0;
+  release(&sched_data_lock);
+  cprintf("end s_init\n");
 }
 
 void schedule_update()
 {
+ // cprintf("start s_update\n");
 	acquire(&sched_data_lock);
 	static int last_update =0;
 	if (last_update == 0)
@@ -34,32 +42,54 @@ void schedule_update()
 	sched_data.global_pass += (sched_data.global_stride * elapsed) / quantum;
 	
 	release(&sched_data_lock);
+ // cprintf("end s_update\n");
+}
+
+// requires lock to be held
+int heap_contains(struct proc * p)
+{
+	int i;
+	for (i = 0; i <= sched_data.bottom; ++i)
+	{
+		if (sched_data.heap[i]->pid == p->pid)
+		{
+			cprintf("Heap_contains found a match for pid %d! Bad news!\n", p->pid);
+			return 1;
+		}
+	}
+	return 0;
 }
 
 void global_tickets_update(int tickets)
 {
+  cprintf("start g_tickets_update\n");
+	if (tickets == 0 || sched_data.global_tickets == 0)
+		return;
 	sched_data.global_tickets += tickets;
 	sched_data.global_stride = stride1 / sched_data.global_tickets;
+  cprintf("end g_tickets_update\n");
 }
 
 
 struct proc * _queue_remove(int root_index)
 {
+  //cprintf("start _queue_remove\n");
 	acquire(&sched_data_lock);
 	struct proc ** heap = sched_data.heap;
-	struct proc * top = heap[0];
+	struct proc * top = heap[root_index];
 	// reheapify
-	heap[root_index] = heap[sched_data.bottom--];
+	heap[root_index] = heap[sched_data.bottom];
+	sched_data.bottom -= 1;
 	int current = root_index;
 	while(1)
 	{
 		int min;
-		if (2*current + 1 >= sched_data.bottom)
+		if (2*current >= sched_data.bottom)
 			break;
-		else if (2*current + 2 >= sched_data.bottom)
-			min = 2 * current + 1;
+		else if (2*current + 1 >= sched_data.bottom)
+			min =  2*current;
 		else
-			min = (heap[2*current + 1]->pass > heap[2*current + 2]->pass) ? 2*current + 1 : 2*current + 2;
+			min = (heap[2*current ]->pass < heap[2*current + 1]->pass) ? 2*current : 2*current + 1;
 		
 		if (heap[current]->pass > heap[min]->pass)
 		{
@@ -73,35 +103,57 @@ struct proc * _queue_remove(int root_index)
 	}
 
 	release(&sched_data_lock);
+  //cprintf("end _queue_remove\n");
 	return top;
 }
 
 void schedule_insert(struct proc * p)
 {
+  //cprintf("start s_insert\n");
+	cprintf("Insert proc %d, size %d\n", p->pid, sched_data.bottom+1);
 	schedule_update();
 	acquire(&sched_data_lock);
-	int current = sched_data.bottom;
-	sched_data.heap[sched_data.bottom++] = p;
-	while(current && sched_data.heap[current]->pass > sched_data.heap[(current - 1)/2]->pass)
+	if (heap_contains(p))
 	{
-		struct proc* temp = sched_data.heap[(current-1)/2];
-		sched_data.heap[(current-1)/2] = sched_data.heap[current];
+		release(&sched_data_lock);
+		return;
+	}
+	sched_data.bottom++; // bottom points at the last element
+	int current = sched_data.bottom;
+	sched_data.heap[sched_data.bottom] = p;
+	while(current > 1 && sched_data.heap[current]->pass < sched_data.heap[current/2]->pass)
+	{
+		struct proc* temp = sched_data.heap[current/2];
+		sched_data.heap[current/2] = sched_data.heap[current];
 		sched_data.heap[current] = temp;
-		current = (current-1)/2;
+		current = current/2;
 	}
 
 	release(&sched_data_lock);
+  //cprintf("end s_insert\n");
 }
 
 struct proc * schedule_pop()
 {
-	return _queue_remove(0);
+ // cprintf("start s_pop\n");
+  acquire(&sched_data_lock);
+  if (sched_data.bottom == 0)
+  {
+    	release(&sched_data_lock);
+	return 0;
+  }
+  release(&sched_data_lock);
+   struct proc * p =  _queue_remove(1);
+   cprintf("Pop pid %d, size %d\n", p->pid, sched_data.bottom);
+   return p;
+  //cprintf("end s_pop\n");
 }
 
 void queue_remove(struct proc * p)
 {
+ // cprintf("start s_remove\n");
 	acquire(&sched_data_lock);
-	int i = 0;
+	int i = 1;
 	for(; i < sched_data.bottom; ++i)
 	{
 		if (sched_data.heap[i] == p)
@@ -113,25 +165,29 @@ void queue_remove(struct proc * p)
 	}
 
 	release(&sched_data_lock);
+  cprintf("end s_remove\n");
 }
 
 
 void schedule_join(struct proc *p)
 {
-	acquire(&sched_data_lock);
+  cprintf("start s_join\n");
 	schedule_update();
+	acquire(&sched_data_lock);
 	p->pass = sched_data.global_pass + (p->elapsed ? (quantum - p->elapsed) : 0);
 	p->elapsed = clock();
 	global_tickets_update(p->tickets);
 
 	release(&sched_data_lock);
 	schedule_insert(p);
+  cprintf("end s_join\n");
 }
 
 void schedule_leave(struct proc *p)
 {
-	acquire(&sched_data_lock);
+  cprintf("start s_leave\n");
 	schedule_update();
+	acquire(&sched_data_lock);
 	p->elapsed = clock() - p->elapsed;
 	p->elapsed = (p->elapsed > 0) ? p->elapsed : 0;
 
@@ -139,11 +195,14 @@ void schedule_leave(struct proc *p)
 	
 	release(&sched_data_lock);
 	queue_remove(p);
+  cprintf("end s_leave\n");
 }
 
 void schedule_init_proc(struct proc *p, int tickets)
 {
+  cprintf("start s_init_proc\n");
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
         p->elapsed = 0;
+  cprintf("end s_init_proc\n");
 }

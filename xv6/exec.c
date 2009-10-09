@@ -5,6 +5,7 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
+#include "scheduler.h"
 
 int
 exec(char *path, char **argv)
@@ -105,6 +106,7 @@ exec(char *path, char **argv)
   cp->tf->eip = elf.entry;  // main
   cp->tf->esp = sp;
   setupsegs(cp);
+  schedule_insert(cp);
   return 0;
 
  bad:

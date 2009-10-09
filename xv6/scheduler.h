@@ -4,7 +4,7 @@ struct schedule_data {
 	int global_tickets;
 	int global_stride;
 	int global_pass;
-	struct proc * heap[NPROC];
+	struct proc * heap[NPROC+1];
 };
 
 void schedule_insert(struct proc*);
