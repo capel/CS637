@@ -12,7 +12,7 @@ struct proc * schedule_pop();
 void schedule_init();
 void schedule_join(struct proc *p);
 void schedule_leave(struct proc *p);
-void schedule_init_proc(struct proc *p, int tickets);
+void mod_tickets(struct proc *p, int tickets);
 
 extern const int quantum;
 extern const int stride1;

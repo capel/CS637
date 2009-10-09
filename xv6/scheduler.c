@@ -34,12 +34,10 @@ void schedule_update()
 	static int last_update =0;
 	if (last_update == 0)
 		last_update = clock();
-	int elapsed;
-
-	elapsed = clock() - last_update;
+	int elapsed = clock() - last_update;
 	last_update = clock();
 
-	sched_data.global_pass += (sched_data.global_stride * elapsed) / quantum;
+	sched_data.global_pass += (sched_data.global_stride * (elapsed / quantum));
 	
 	release(&sched_data_lock);
  // cprintf("end s_update\n");
@@ -173,9 +171,10 @@ void schedule_join(struct proc *p)
 	schedule_update();
 	acquire(&sched_data_lock);
 //	cprintf("join : %d\n", p->pid);
-	p->pass = sched_data.global_pass + (p->elapsed ? (quantum - p->elapsed) : 0);
-	p->elapsed = clock();
+	
 	global_tickets_update(p->tickets);
+	p->pass = sched_data.global_pass; //+ (p->elapsed ? (quantum - p->elapsed) : 0);
+	//p->elapsed = clock();
 
 	release(&sched_data_lock);
 	schedule_insert(p);
@@ -187,8 +186,8 @@ void schedule_leave(struct proc *p)
 	acquire(&sched_data_lock);
 
 //	cprintf("leave : %d\n", p->pid);
-	p->elapsed = clock() - p->elapsed;
-	p->elapsed = (p->elapsed > 0) ? p->elapsed : 0;
+	//p->elapsed = clock() - p->elapsed;
+	//p->elapsed = (p->elapsed > 0) ? p->elapsed : 0;
 
 	global_tickets_update(-p->tickets);
 	
@@ -196,11 +195,12 @@ void schedule_leave(struct proc *p)
 	queue_remove(p);
 }
 
-void schedule_init_proc(struct proc *p, int tickets)
+// requires proc_table_lock to be held
+void mod_tickets(struct proc *p, int tickets)
 {
-  cprintf("start s_init_proc\n");
+	schedule_leave(p);
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
-        p->elapsed = 0;
-  cprintf("end s_init_proc\n");
+    //p->elapsed = 0;
+	schedule_join(p);
 }

@@ -129,8 +129,9 @@ copyproc(struct proc *p)
   
  // cprintf(".c");
 
-
   if(p){  // Copy process state from p.
+	mod_tickets(np, tickets);
+
     np->parent = p;
     memmove(np->tf, p->tf, sizeof(*np->tf));
 
@@ -150,11 +151,14 @@ copyproc(struct proc *p)
         np->ofile[i] = filedup(p->ofile[i]);
     np->cwd = idup(p->cwd);
   }
+  else
+  {
+	  mod_tickets(np, 100) // TODO
+  }
 
 
  // cprintf(".s");
 
-  schedule_init_proc(np, 100); // TODO ticket logic
   schedule_join(np);
   
   // Set up new context to start executing at forkret (see below).
@@ -251,8 +255,8 @@ scheduler(void)
       p->state = RUNNING;
       swtch(&c->context, &p->context);
 	  
-	int elapsed = clock() - p->elapsed;
-	p->pass = (p->stride * elapsed) / quantum;
+	//int elapsed = clock() - p->elapsed;
+	  p->pass += p->stride; // (p->stride * elapsed) / quantum;
 	if (p->state == RUNNABLE)
 		schedule_insert(p);
 
@@ -403,9 +407,6 @@ fund(int pid, int numtickets)
   cprintf("fund : %d to %d funded %d\n", cp->pid, pid, numtickets);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
-      schedule_leave(p);
-	  p->tickets = numtickets;
-	  schedule_join(p);
       release(&proc_table_lock);
       return 0;
     }
