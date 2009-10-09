@@ -249,6 +249,7 @@ scheduler(void)
 		continue;
 	  }
 
+	  cprintf("RUN %d\n", p->pid);
       // Switch to chosen process. It is the process's job
       // to release proc_table_lock and then reacquire it
       // before jumping back to us.
@@ -269,63 +270,6 @@ scheduler(void)
   }
 }
 
-#if 0
-// Per-CPU process scheduler.
-// Each CPU calls scheduler() after setting itself up.
-// Scheduler never returns.  It loops, doing:
-//  - choose a process to run
-//  - swtch to start running that process
-//  - eventually that process transfers control
-//      via swtch back to the scheduler.
-void
-scheduler(void)
-{
-  struct proc *p;
-  struct cpu *c;
-
-  c = &cpus[cpu()];
-  for(;;){
-    // Enable interrupts on this processor.
-    sti();
-
-    if (!holding(&proc_table_lock))
-		acquire(&proc_table_lock);
-    // Loop over process table looking for process to run.
-		while(!(p = schedule_pop()))
-		{
-    		release(&proc_table_lock);
-			//cprintf(".");
-			acquire(&proc_table_lock);
-		}
-
-      	if(p->state != RUNNABLE)
-			continue;
-      // Switch to chosen process.  It is the process's job
-      // to release proc_table_lock and then reacquire it
-      // before jumping back to us.
-      c->curproc = p;
-      setupsegs(p);
-      p->state = RUNNING;
-	  cprintf("before swtch\n");
-      swtch(&c->context, &p->context);
-	  cprintf("after switch\n");
-	//int elapsed = clock() - p->elapsed;
-	  p->pass += p->stride; // (p->stride * elapsed) / quantum;
-	if (p->state == RUNNABLE)
-	{
-		cprintf("scheduler\n");
-		schedule_insert(p);
-
-	}
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
-      c->curproc = 0;
-      setupsegs(0);
-    release(&proc_table_lock);
-  }
-}
-#endif
 // Enter scheduler.  Must already hold proc_table_lock
 // and have changed curproc[cpu()]->state.
 void

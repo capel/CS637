@@ -51,7 +51,7 @@ int heap_contains(struct proc * p)
 	{
 		if (sched_data.heap[i]->pid == p->pid)
 		{
-			cprintf("Heap_contains found a match for pid %d! Bad news!\n", p->pid);
+		//	cprintf("Heap_contains found a match for pid %d! Bad news!\n", p->pid);
 			return 1;
 		}
 	}
