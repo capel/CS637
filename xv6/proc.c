@@ -108,9 +108,14 @@ copyproc(struct proc *p)
   int i;
   struct proc *np;
 
+  cprintf("cp.a");
+
   // Allocate process.
   if((np = allocproc()) == 0)
     return 0;
+
+  cprintf(".k");
+
 
   // Allocate kernel stack.
   if((np->kstack = kalloc(KSTACKSIZE)) == 0){
@@ -118,6 +123,10 @@ copyproc(struct proc *p)
     return 0;
   }
   np->tf = (struct trapframe*)(np->kstack + KSTACKSIZE) - 1;
+
+  
+  cprintf(".c");
+
 
   if(p){  // Copy process state from p.
     np->parent = p;
@@ -140,6 +149,9 @@ copyproc(struct proc *p)
     np->cwd = idup(p->cwd);
   }
 
+
+  cprintf(".s");
+
   schedule_init_proc(np, 100); // TODO ticket logic
   schedule_join(np);
   
@@ -150,6 +162,9 @@ copyproc(struct proc *p)
 
   // Clear %eax so that fork system call returns 0 in child.
   np->tf->eax = 0;
+  
+  cprintf(".d");
+
   return np;
 }
 

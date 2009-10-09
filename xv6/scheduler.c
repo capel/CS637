@@ -78,6 +78,7 @@ struct proc * _queue_remove(int root_index)
 	struct proc * top = heap[root_index];
 	// reheapify
 	heap[root_index] = heap[sched_data.bottom];
+	sched_data.heap[sched_data.bottom] = 0;
 	sched_data.bottom -= 1;
 	int current = root_index;
 	while(1)
