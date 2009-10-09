@@ -203,5 +203,6 @@ void mod_tickets(struct proc *p, int tickets)
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
     //p->elapsed = 0;
+	cprintf("mod_tickets -> join\n");
 	schedule_join(p);
 }
