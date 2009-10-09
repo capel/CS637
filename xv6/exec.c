@@ -108,6 +108,7 @@ exec(char *path, char **argv)
   cp->tf->eip = elf.entry;  // main
   cp->tf->esp = sp;
   setupsegs(cp);
+  cprintf("exec\n");
   schedule_insert(cp);
   return 0;
 

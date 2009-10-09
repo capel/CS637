@@ -177,6 +177,7 @@ void schedule_join(struct proc *p)
 	//p->elapsed = clock();
 
 	release(&sched_data_lock);
+	cprintf("join\n");
 	schedule_insert(p);
 }
 

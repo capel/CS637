@@ -258,7 +258,11 @@ scheduler(void)
 	//int elapsed = clock() - p->elapsed;
 	  p->pass += p->stride; // (p->stride * elapsed) / quantum;
 	if (p->state == RUNNABLE)
+	{
+		cprintf("scheduler\n");
 		schedule_insert(p);
+
+	}
 
       // Process is done running for now.
       // It should have changed its p->state before coming back.
