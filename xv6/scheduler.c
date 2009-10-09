@@ -128,7 +128,7 @@ void schedule_insert(struct proc * p)
 	}
 
 	release(&sched_data_lock);
-  //cprintf("end s_insert\n");
+  cprintf("end s_insert\n");
 }
 
 struct proc * schedule_pop()
