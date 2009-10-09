@@ -243,8 +243,12 @@ scheduler(void)
 		continue;
 	}
       if(p->state != RUNNABLE)
+	  {
         schedule_insert(p);
- 
+ 		release(&proc_table_lock);
+		continue;
+	  }
+
       // Switch to chosen process. It is the process's job
       // to release proc_table_lock and then reacquire it
       // before jumping back to us.
