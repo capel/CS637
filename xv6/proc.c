@@ -376,7 +376,7 @@ sleep(void *chan, struct spinlock *lk)
   if(lk == 0)
     panic("sleep without lk");
 
-  cprintf("sleep : %d\n", cp->pid);
+ // cprintf("sleep : %d\n", cp->pid);
 
   // Must acquire proc_table_lock in order to
   // change p->state and then call sched.
@@ -415,9 +415,9 @@ wakeup1(void *chan)
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
     {
-	 cprintf("wakeup1: \n", p->pid);
+	 //cprintf("wakeup1: \n", p->pid);
       p->state = RUNNABLE;
-	  cprintf("wakeup1 -> join\n");
+	 // cprintf("wakeup1 -> join\n");
       schedule_join(p);
     }
 }
@@ -441,7 +441,7 @@ kill(int pid)
 
   acquire(&proc_table_lock);
   
-  cprintf("kill : %d to %d\n", cp->pid, pid);
+ // cprintf("kill : %d to %d\n", cp->pid, pid);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
@@ -463,7 +463,7 @@ fund(int pid, int numtickets)
 
   acquire(&proc_table_lock);
   
-  cprintf("fund : %d to %d funded %d\n", cp->pid, pid, numtickets);
+ // cprintf("fund : %d to %d funded %d\n", cp->pid, pid, numtickets);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
       mod_tickets(p, numtickets);
@@ -487,7 +487,7 @@ exit(void)
   if(cp == initproc)
     panic("init exiting");
 
-  cprintf("exit : %d\n", cp->pid);
+ // cprintf("exit : %d\n", cp->pid);
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -532,7 +532,7 @@ wait(void)
 
   acquire(&proc_table_lock);
   
-  cprintf("wait : %d\n", cp->pid);
+ // cprintf("wait : %d\n", cp->pid);
   for(;;){
     // Scan through table looking for zombie children.
     havekids = 0;
