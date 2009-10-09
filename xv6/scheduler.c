@@ -108,7 +108,7 @@ struct proc * _queue_remove(int root_index)
 void schedule_insert(struct proc * p)
 {
   //cprintf("start s_insert\n");
-//	cprintf("Insert proc %d, size %d\n", p->pid, sched_data.bottom+1);
+	cprintf("Insert proc %d, size %d\n", p->pid, sched_data.bottom+1);
 	schedule_update();
 	acquire(&sched_data_lock);
 	if (heap_contains(p))
@@ -133,7 +133,7 @@ void schedule_insert(struct proc * p)
 
 struct proc * schedule_pop()
 {
- // cprintf("start s_pop\n");
+  cprintf("start s_pop\n");
   acquire(&sched_data_lock);
   if (sched_data.bottom == 0)
   {
@@ -142,14 +142,14 @@ struct proc * schedule_pop()
   }
   release(&sched_data_lock);
    struct proc * p =  _queue_remove(1);
-  // cprintf("Pop pid %d, size %d\n", p->pid, sched_data.bottom);
+   cprintf("Pop pid %d, size %d\n", p->pid, sched_data.bottom);
    return p;
-  //cprintf("end s_pop\n");
+  cprintf("end s_pop\n");
 }
 
 void queue_remove(struct proc * p)
 {
- // cprintf("start s_remove\n");
+  cprintf("start s_remove\n");
 	acquire(&sched_data_lock);
 	int i = 1;
 	for(; i < sched_data.bottom; ++i)
@@ -170,7 +170,7 @@ void schedule_join(struct proc *p)
 {
 	schedule_update();
 	acquire(&sched_data_lock);
-//	cprintf("join : %d\n", p->pid);
+	cprintf("join : %d\n", p->pid);
 	
 	global_tickets_update(p->tickets);
 	p->pass = sched_data.global_pass; //+ (p->elapsed ? (quantum - p->elapsed) : 0);
@@ -186,7 +186,7 @@ void schedule_leave(struct proc *p)
 	schedule_update();
 	acquire(&sched_data_lock);
 
-//	cprintf("leave : %d\n", p->pid);
+	cprintf("leave : %d\n", p->pid);
 	//p->elapsed = clock() - p->elapsed;
 	//p->elapsed = (p->elapsed > 0) ? p->elapsed : 0;
 
@@ -199,6 +199,7 @@ void schedule_leave(struct proc *p)
 // requires proc_table_lock to be held
 void mod_tickets(struct proc *p, int tickets)
 {
+	cprintf("Mod tickets, %d gets %\n", p->pid, tickets);
 	schedule_leave(p);
 	p->tickets = tickets;
 	p->stride = stride1 / tickets;
