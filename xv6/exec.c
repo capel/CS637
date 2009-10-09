@@ -10,6 +10,8 @@
 int
 exec(char *path, char **argv)
 {
+  
+  cprintf("exec : %d -> %s\n", cp->pid, path);
   char *mem, *s, *last;
   int i, argc, arglen, len, off;
   uint sz, sp, argp;

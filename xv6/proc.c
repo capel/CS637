@@ -295,6 +295,8 @@ sleep(void *chan, struct spinlock *lk)
   if(lk == 0)
     panic("sleep without lk");
 
+  cprintf("sleep : %d\n", cp->pid);
+
   // Must acquire proc_table_lock in order to
   // change p->state and then call sched.
   // Once we hold proc_table_lock, we can be
@@ -329,6 +331,9 @@ wakeup1(void *chan)
 {
   struct proc *p;
 
+  
+  cprintf("wakeup1\n");
+
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
     {
@@ -355,6 +360,8 @@ kill(int pid)
   struct proc *p;
 
   acquire(&proc_table_lock);
+  
+  cprintf("kill : %d to %d\n", cp->pid, pid);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
@@ -380,6 +387,8 @@ exit(void)
 
   if(cp == initproc)
     panic("init exiting");
+
+  cprintf("exit : %d\n", cp->pid);
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -423,6 +432,8 @@ wait(void)
   int i, havekids, pid;
 
   acquire(&proc_table_lock);
+  
+  cprintf("wait : %d\n", cp->pid);
   for(;;){
     // Scan through table looking for zombie children.
     havekids = 0;
