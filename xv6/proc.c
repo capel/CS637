@@ -112,8 +112,10 @@ copyproc(struct proc *p)
 
   // Allocate process.
   if((np = allocproc()) == 0)
+  {
+	  cprintf("allocproc failed");
     return 0;
-
+  }
   cprintf(".k");
 
 
