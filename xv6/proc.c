@@ -225,9 +225,6 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c;
-  int i;
-  int lastpid;
- 
   c = &cpus[cpu()];
   for(;;){
     // Enable interrupts on this processor.

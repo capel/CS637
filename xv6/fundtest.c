@@ -2,18 +2,8 @@
 #include "stat.h"
 #include "user.h"
 
-int
-main(int argc, char **argv)
-{
-  int pid;
-  pid = makekid();
-  fund(pid, 200);
-  pid = makekid();
-  fund(pid, 400);
-  exit();
-}
 
-void makekid()
+int makekid()
 {
   int pid = fork();
   int result;
@@ -27,4 +17,16 @@ void makekid()
   }
   else
 	  return pid;
+}
+
+
+int
+main(int argc, char **argv)
+{
+  int pid;
+  pid = makekid();
+  fund(pid, 200);
+  pid = makekid();
+  fund(pid, 400);
+  exit();
 }
