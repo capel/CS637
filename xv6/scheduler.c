@@ -67,7 +67,6 @@ void global_tickets_update(int tickets)
 		return;
 	sched_data.global_tickets += tickets;
 	sched_data.global_stride = stride1 / sched_data.global_tickets;
-  cprintf("end g_tickets_update\n");
 }
 
 
@@ -165,7 +164,6 @@ void queue_remove(struct proc * p)
 	}
 
 	release(&sched_data_lock);
-  cprintf("end s_remove\n");
 }
 
 
@@ -180,7 +178,6 @@ void schedule_join(struct proc *p)
 
 	release(&sched_data_lock);
 	schedule_insert(p);
-  cprintf("end s_join\n");
 }
 
 void schedule_leave(struct proc *p)
@@ -196,7 +193,6 @@ void schedule_leave(struct proc *p)
 	
 	release(&sched_data_lock);
 	queue_remove(p);
-  cprintf("end s_leave\n");
 }
 
 void schedule_init_proc(struct proc *p, int tickets)
