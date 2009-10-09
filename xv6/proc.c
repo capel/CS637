@@ -238,7 +238,7 @@ scheduler(void)
     // Enable interrupts on this processor.
     sti();
 
-    
+    if (!holding(&proc_table_lock))
 		acquire(&proc_table_lock);
     // Loop over process table looking for process to run.
 		while(!(p = schedule_pop()))

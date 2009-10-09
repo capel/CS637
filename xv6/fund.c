@@ -5,12 +5,10 @@
 int
 main(int argc, char **argv)
 {
-  int i;
-	
   if(argc < 2){
     printf(2, "usage: fund pid numtickets\n");
     exit();
   }
-  fund(atoi(argv[i]), atoi(argv[2]));
+  fund(atoi(argv[1]), atoi(argv[2]));
   exit();
 }
