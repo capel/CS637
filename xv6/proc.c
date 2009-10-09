@@ -244,6 +244,7 @@ scheduler(void)
 		while(!(p = schedule_pop()))
 		{
     		release(&proc_table_lock);
+			cprintf(".");
 			acquire(&proc_table_lock);
 		}
 
@@ -552,7 +553,7 @@ procdump(void)
     cprintf("\n");
   }
   cprintf("Process Queue\n");
-  for(i = 0; i <= sched_data.bottom, ++i)
+  for(i = 0; i <= sched_data.bottom; ++i)
   {    
     p = &proc[i];
     if(p->state == UNUSED)
@@ -568,7 +569,7 @@ procdump(void)
         cprintf(" %p", pc[j]);
     }
     cprintf("\n");
-
+  }
 
 }
 
