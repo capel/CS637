@@ -392,3 +392,17 @@ sys_pipe(void)
   fd[1] = fd1;
   return 0;
 }
+
+extern int icheck(struct inode*ip, int offset);
+
+int sys_check(void)
+{
+	int fd;
+	struct file* f;
+	int offset;
+
+
+	if (argfd(0, &fd, &f) < 0 ||argint(1, &offset))
+		return -1;
+	return icheck(f->ip, offset);
+}
