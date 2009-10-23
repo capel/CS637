@@ -617,27 +617,3 @@ nameiparent(char *path, char *name)
 {
   return _namei(path, 1, name);
 }
-
-int
-icheck(struct inode* ip, int offset)
-{
-	if (offset >= ip->size)
-		return -1;
-	int block = offset / BSIZE;
-	uint addr = ip->addrs[block];
-	struct buf* b;
-
-	
-  acquire(&buf_table_lock);
-  // Try for cached block.
-  for(b = bufhead.next; b != &bufhead; b = b->next){
-    if((b->flags & (B_BUSY|B_VALID)) &&
-       b->dev == ip->dev && b->sector == ip->sector){
-		release(&buf_table_lock);
-      	return 1;
-      }
-    }
-  
-	release(&buf_table_lock);
-      return 0;
-}

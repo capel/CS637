@@ -1,5 +1,4 @@
 OBJS = \
-	scheduler.o\
 	bio.o\
 	console.o\
 	exec.o\
@@ -25,7 +24,7 @@ OBJS = \
 	trapasm.o\
 	trap.o\
 	vectors.o\
-	
+
 # Cross-compiling (e.g., on Mac OS X)
 #TOOLPREFIX = i386-jos-elf-
 
@@ -110,8 +109,7 @@ UPROGS=\
 	_usertests\
 	_wc\
 	_zombie\
-	_fund\
-	
+
 fs.img: mkfs README $(UPROGS)
 	./mkfs fs.img README $(UPROGS)
 

@@ -21,7 +21,6 @@ int dup(int);
 int getpid();
 char* sbrk(int);
 int sleep(int);
-int fund(int pid, int numtickets);
 
 // ulib.c
 int stat(char*, struct stat*);

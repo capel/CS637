@@ -5,10 +5,8 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
-#include "scheduler.h"
 
 struct spinlock proc_table_lock;
-extern struct spinlock sched_data_lock;
 
 struct proc proc[NPROC];
 static struct proc *initproc;
@@ -21,7 +19,6 @@ void
 pinit(void)
 {
   initlock(&proc_table_lock, "proc_table");
-  schedule_init();
 }
 
 // Look in the process table for an UNUSED proc.
@@ -108,16 +105,9 @@ copyproc(struct proc *p)
   int i;
   struct proc *np;
 
- // cprintf("cp.a");
-
   // Allocate process.
   if((np = allocproc()) == 0)
-  {
-	 // cprintf("allocproc failed");
     return 0;
-  }
- // cprintf(".k");
-
 
   // Allocate kernel stack.
   if((np->kstack = kalloc(KSTACKSIZE)) == 0){
@@ -126,16 +116,10 @@ copyproc(struct proc *p)
   }
   np->tf = (struct trapframe*)(np->kstack + KSTACKSIZE) - 1;
 
-  
- // cprintf(".c");
-
   if(p){  // Copy process state from p.
-	mod_tickets(np, p->tickets);
-
     np->parent = p;
     memmove(np->tf, p->tf, sizeof(*np->tf));
-
-
+  
     np->sz = p->sz;
     if((np->mem = kalloc(np->sz)) == 0){
       kfree(np->kstack, KSTACKSIZE);
@@ -151,18 +135,7 @@ copyproc(struct proc *p)
         np->ofile[i] = filedup(p->ofile[i]);
     np->cwd = idup(p->cwd);
   }
-  else
-  {
-	  mod_tickets(np, 100); // TODO
-  }
 
-
- // cprintf(".s");
-
-  
-	  //cprintf("copyproc -> join\n");
-  schedule_join(np);
-  
   // Set up new context to start executing at forkret (see below).
   memset(&np->context, 0, sizeof(np->context));
   np->context.eip = (uint)forkret;
@@ -170,9 +143,6 @@ copyproc(struct proc *p)
 
   // Clear %eax so that fork system call returns 0 in child.
   np->tf->eax = 0;
-  
-  //cprintf(".d");
-
   return np;
 }
 
@@ -220,51 +190,47 @@ curproc(void)
   return p;
 }
 
+// Per-CPU process scheduler.
+// Each CPU calls scheduler() after setting itself up.
+// Scheduler never returns.  It loops, doing:
+//  - choose a process to run
+//  - swtch to start running that process
+//  - eventually that process transfers control
+//      via swtch back to the scheduler.
 void
 scheduler(void)
 {
   struct proc *p;
   struct cpu *c;
+  int i;
+
   c = &cpus[cpu()];
   for(;;){
     // Enable interrupts on this processor.
     sti();
- 
-    // Loop over process table looking for process to run.
-	if (!holding(&proc_table_lock))
-    	acquire(&proc_table_lock);
-    p = schedule_pop();
-	if (!p)
-	{
-		release(&proc_table_lock);
-		continue;
-	}
-      if(p->state != RUNNABLE)
-	  {
-        schedule_insert(p);
- 		release(&proc_table_lock);
-		continue;
-	  }
 
-	  cprintf("RUN %d\n", p->pid);
-      // Switch to chosen process. It is the process's job
+    // Loop over process table looking for process to run.
+    acquire(&proc_table_lock);
+    for(i = 0; i < NPROC; i++){
+      p = &proc[i];
+      if(p->state != RUNNABLE)
+        continue;
+
+      // Switch to chosen process.  It is the process's job
       // to release proc_table_lock and then reacquire it
       // before jumping back to us.
       c->curproc = p;
       setupsegs(p);
       p->state = RUNNING;
-      p->pass += p->stride;
-
       swtch(&c->context, &p->context);
- 
+
       // Process is done running for now.
       // It should have changed its p->state before coming back.
-	  if (p->state == RUNNABLE)
-		  schedule_insert(p);
       c->curproc = 0;
       setupsegs(0);
+    }
     release(&proc_table_lock);
- 
+
   }
 }
 
@@ -318,8 +284,6 @@ sleep(void *chan, struct spinlock *lk)
   if(lk == 0)
     panic("sleep without lk");
 
- // cprintf("sleep : %d\n", cp->pid);
-
   // Must acquire proc_table_lock in order to
   // change p->state and then call sched.
   // Once we hold proc_table_lock, we can be
@@ -334,7 +298,6 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   cp->chan = chan;
   cp->state = SLEEPING;
-  schedule_leave(cp);
   sched();
 
   // Tidy up.
@@ -356,12 +319,7 @@ wakeup1(void *chan)
 
   for(p = proc; p < &proc[NPROC]; p++)
     if(p->state == SLEEPING && p->chan == chan)
-    {
-	 //cprintf("wakeup1: \n", p->pid);
       p->state = RUNNABLE;
-	 // cprintf("wakeup1 -> join\n");
-      schedule_join(p);
-    }
 }
 
 // Wake up all processes sleeping on chan.
@@ -382,33 +340,12 @@ kill(int pid)
   struct proc *p;
 
   acquire(&proc_table_lock);
-  
- // cprintf("kill : %d to %d\n", cp->pid, pid);
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
-      release(&proc_table_lock);
-      return 0;
-    }
-  }
-  release(&proc_table_lock);
-  return -1;
-}
-
-int
-fund(int pid, int numtickets)
-{
-  struct proc *p;
-
-  acquire(&proc_table_lock);
-  
- // cprintf("fund : %d to %d funded %d\n", cp->pid, pid, numtickets);
-  for(p = proc; p < &proc[NPROC]; p++){
-    if(p->pid == pid){
-      mod_tickets(p, numtickets);
       release(&proc_table_lock);
       return 0;
     }
@@ -428,8 +365,6 @@ exit(void)
 
   if(cp == initproc)
     panic("init exiting");
-
- // cprintf("exit : %d\n", cp->pid);
 
   // Close all open files.
   for(fd = 0; fd < NOFILE; fd++){
@@ -459,7 +394,6 @@ exit(void)
   // Jump into the scheduler, never to return.
   cp->killed = 0;
   cp->state = ZOMBIE;
-  schedule_leave(cp);
   sched();
   panic("zombie exit");
 }
@@ -473,8 +407,6 @@ wait(void)
   int i, havekids, pid;
 
   acquire(&proc_table_lock);
-  
- // cprintf("wait : %d\n", cp->pid);
   for(;;){
     // Scan through table looking for zombie children.
     havekids = 0;
@@ -485,7 +417,7 @@ wait(void)
       if(p->parent == cp){
         if(p->state == ZOMBIE){
           // Found one.
-          kfree(p->mem, p->sz);	
+          kfree(p->mem, p->sz);
           kfree(p->kstack, KSTACKSIZE);
           pid = p->pid;
           p->state = UNUSED;
@@ -537,7 +469,7 @@ procdump(void)
       state = states[p->state];
     else
       state = "???";
-	cprintf("%d %s %s _%d_ ", p->pid, state, p->name, p->tickets);
+    cprintf("%d %s %s", p->pid, state, p->name);
     if(p->state == SLEEPING){
       getcallerpcs((uint*)p->context.ebp+2, pc);
       for(j=0; j<10 && pc[j] != 0; j++)
@@ -545,24 +477,5 @@ procdump(void)
     }
     cprintf("\n");
   }
-  cprintf("Process Queue\n");
-  for(i = 0; i <= sched_data.bottom; ++i)
-  {    
-    p = &proc[i];
-    if(p->state == UNUSED)
-      continue;
-    if(p->state >= 0 && p->state < NELEM(states) && states[p->state])
-      state = states[p->state];
-    else
-      state = "???";
-	cprintf("%d %s %s _%d_ ", p->pid, state, p->name, p->tickets);
-    if(p->state == SLEEPING){
-      getcallerpcs((uint*)p->context.ebp+2, pc);
-      for(j=0; j<10 && pc[j] != 0; j++)
-        cprintf(" %p", pc[j]);
-    }
-    cprintf("\n");
-  }
-
 }
 

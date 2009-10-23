@@ -5,13 +5,10 @@
 #include "defs.h"
 #include "x86.h"
 #include "elf.h"
-#include "scheduler.h"
 
 int
 exec(char *path, char **argv)
 {
-  
-  cprintf("exec : %d -> %s\n", cp->pid, path);
   char *mem, *s, *last;
   int i, argc, arglen, len, off;
   uint sz, sp, argp;
@@ -108,8 +105,6 @@ exec(char *path, char **argv)
   cp->tf->eip = elf.entry;  // main
   cp->tf->esp = sp;
   setupsegs(cp);
- // cprintf("exec\n");
-  schedule_insert(cp);
   return 0;
 
  bad:

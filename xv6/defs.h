@@ -18,7 +18,6 @@ void            console_init(void);
 void            cprintf(char*, ...);
 void            console_intr(int(*)(void));
 void            panic(char*) __attribute__((noreturn));
-void            panic2(char*, char*) __attribute__((noreturn));
 
 // exec.c
 int             exec(char*, char**);
@@ -106,7 +105,6 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int			fund(int pid, int tickets);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

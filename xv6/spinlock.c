@@ -27,7 +27,7 @@ acquire(struct spinlock *lock)
 {
   pushcli();
   if(holding(lock))
-	  panic2("acquire : ", lock->name);
+    panic("acquire");
 
   // The xchg is atomic.
   // It also serializes, so that reads after acquire are not
@@ -48,7 +48,7 @@ void
 release(struct spinlock *lock)
 {
   if(!holding(lock))
-	  panic2("release :", lock->name);
+    panic("release");
 
   lock->pcs[0] = 0;
   lock->cpu = 0xffffffff;
