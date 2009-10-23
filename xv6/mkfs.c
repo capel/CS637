@@ -7,8 +7,8 @@
 #include "types.h"
 #include "fs.h"
 
-int nblocks = 995;
-int ninodes = 200;
+int nblocks = 10000;
+int ninodes = 2000;
 int size = 1024;
 
 int fsfd;

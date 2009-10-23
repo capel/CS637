@@ -20,3 +20,4 @@
 #define SYS_sbrk   19
 #define SYS_sleep  20
 #define SYS_fund   21
+#define SYS_check  22
